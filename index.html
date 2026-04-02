@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Wallet</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav>
+    <span id="app-name">Mini Wallet</span>
+    <button id="theme-toggle" aria-label="Toggle theme">
+      <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- ── Dashboard ── -->
+    <section data-tab="dashboard">
+      <div id="dashboard-filter-row">
+        <input type="month" id="dashboard-month" aria-label="Filter by month" />
+      </div>
+
+      <div id="balance-card">
+        <div id="balance-label">TOTAL BALANCE</div>
+        <div id="total-balance"></div>
+        <div id="balance-diff" class="hidden"></div>
+      </div>
+
+      <div id="action-buttons-row">
+        <div class="action-buttons">
+          <button id="btn-income">+ Income</button>
+          <button id="btn-expense">− Expenses</button>
+        </div>
+      </div>
+
+      <!-- Transaction list + chart side by side -->
+      <table id="dashboard-layout">
+        <tr>
+          <td id="dashboard-txn-cell">
+            <div id="recent-transactions-card">
+              <div id="recent-transactions-title">Transaction List</div>
+              <div id="recent-transactions"></div>
+            </div>
+          </td>
+          <td class="pc-w620-itemsHSpacings-0" style="padding-right: 10px; padding-left: 10px;"></td>
+          <td id="dashboard-chart-cell">
+            <div id="recent-transactions-title">Spending by Category</div>
+            <canvas id="dashboard-chart"></canvas>
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- ── Form ── -->
+    <section data-tab="form">
+      <div id="form-center">
+        <form id="txn-form">
+        <h2 id="form-title">Transaction</h2>
+        <input type="hidden" id="form-type" value="" />
+        <input type="hidden" id="form-edit-id" value="" />
+
+        <!-- Transaction ID (read-only) -->
+        <div id="field-txn-id" class="hidden">
+          <label for="txn-id">Transaction ID
+            <input type="text" id="txn-id" readonly />
+          </label>
+        </div>
+
+        <!-- Budget Month (income only) -->
+        <div id="field-budget-month" class="hidden">
+          <label for="txn-budget-month">Budget Month
+            <input type="month" id="txn-budget-month" />
+          </label>
+          <span class="field-error" id="err-budget-month"></span>
+        </div>
+
+        <!-- Transaction Date (expense only) -->
+        <div id="field-date" class="hidden">
+          <label for="txn-date">Transaction Date
+            <input type="date" id="txn-date" />
+          </label>
+          <span class="field-error" id="err-date"></span>
+        </div>
+
+        <!-- Item Name (expense only) -->
+        <div id="field-item-name" class="hidden">
+          <label for="txn-item-name">Item Name
+            <input type="text" id="txn-item-name" />
+          </label>
+          <span class="field-error" id="err-item-name"></span>
+        </div>
+
+        <!-- Budget Category -->
+        <div id="field-category" class="hidden">
+          <label for="txn-category">Budget Category
+            <select id="txn-category"></select>
+          </label>
+          <div id="field-new-category" class="hidden">
+            <input type="text" id="new-category-name" placeholder="Type new category name…" />
+          </div>
+          <span class="field-error" id="err-category"></span>
+        </div>
+
+        <!-- Amount -->
+        <div id="field-amount" class="hidden">
+          <label for="txn-amount-display">Amount
+            <input type="text" id="txn-amount-display" inputmode="numeric" autocomplete="off" />
+            <input type="hidden" id="txn-amount-raw" />
+          </label>
+          <span class="field-error" id="err-amount"></span>
+        </div>
+
+        <!-- Description -->
+        <div id="field-description" class="hidden">
+          <label for="txn-description">Description
+            <textarea id="txn-description"></textarea>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="btn-submit-form">Save</button>
+          <button type="button" id="btn-cancel-form">Cancel</button>
+        </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ── Transaction List ── -->
+    <section data-tab="list">
+      <div id="list-header">
+        <button id="btn-back-dashboard">← Back</button>
+        <input type="month" id="month-selector" />
+      </div>
+
+      <!-- Chart + table side by side using table layout -->
+      <table id="list-layout">
+        <tr>
+          <td id="list-chart-cell">
+            <div id="list-chart-title">Spending by Category</div>
+            <div id="list-chart-wrap">
+              <canvas id="list-chart"></canvas>
+            </div>
+          </td>
+          <td id="list-table-cell">
+            <table id="txn-table"></table>
+          </td>
+        </tr>
+      </table>
+    </section>
+
+  </main>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>

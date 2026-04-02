@@ -1,0 +1,243 @@
+/* Mini Wallet styles */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+/* ── Custom properties ── */
+:root {
+  --bg: #ffffff;
+  --text: #111111;
+  --card-bg: #f0f0f0;
+  --accent: #4a90e2;
+  --error: #d32f2f;
+  --positive: #2e7d32;
+  --negative: #c62828;
+}
+[data-theme="light"] {
+  --bg: #ffffff; --text: #111111; --card-bg: #f0f0f0;
+  --accent: #4a90e2; --error: #d32f2f;
+  --positive: #2e7d32; --negative: #c62828;
+}
+[data-theme="dark"] {
+  --bg: #1a1a2e; --text: #e0e0e0; --card-bg: #16213e;
+  --accent: #7eb8f7; --error: #ef5350;
+  --positive: #66bb6a; --negative: #ef9a9a;
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  margin: 0; padding: 0;
+}
+main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+
+/* ── Nav ── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1.25rem; background: var(--card-bg);
+}
+#app-name { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.03em; }
+#theme-toggle {
+  background: none; border: none; cursor: pointer; padding: 0;
+  color: var(--text); display: flex; align-items: center;
+  justify-content: center; width: 36px; height: 36px;
+}
+[data-theme="light"] #icon-sun  { display: none; }
+[data-theme="light"] #icon-moon { display: block; }
+[data-theme="dark"]  #icon-moon { display: none; }
+[data-theme="dark"]  #icon-sun  { display: block; }
+
+/* ── Tab sections ── */
+[data-tab] { display: none; }
+
+/* ── Dashboard filter row ── */
+#dashboard-filter-row {
+  display: flex; justify-content: flex-end; margin-bottom: 0.75rem;
+}
+#dashboard-month {
+  background: var(--card-bg); border: 1px solid var(--accent);
+  border-radius: 4px; color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.95rem; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+
+/* ── Balance card ── */
+#balance-card {
+  background: var(--card-bg); border-radius: 8px;
+  padding: 1.25rem; text-align: center; margin-bottom: 0.75rem;
+}
+#balance-label {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; opacity: 0.6; margin-bottom: 0.2rem;
+}
+#total-balance { font-size: 2.2rem; font-weight: 700; line-height: 1.1; }
+#balance-diff { font-size: 0.95rem; margin-top: 0.35rem; }
+#balance-diff.positive { color: var(--positive); }
+#balance-diff.negative { color: var(--negative); }
+
+/* ── Action buttons ── */
+#action-buttons-row { display: flex; justify-content: center; margin-bottom: 1rem; }
+.action-buttons { display: flex; gap: 0.75rem; width: 100%; }
+#btn-income, #btn-expense {
+  flex: 1; background: var(--accent); border: none; border-radius: 4px;
+  color: #fff; cursor: pointer; font-size: 1rem;
+  font-family: 'EB Garamond', Georgia, serif;
+  padding: 0.65rem 0; text-align: center;
+}
+#btn-income:hover, #btn-expense:hover { opacity: 0.85; }
+
+/* ── Dashboard layout table (txn list + chart side by side) ── */
+#dashboard-layout {
+  width: 100%; border-collapse: collapse; margin-top: 0.5rem;
+}
+#dashboard-layout tr { vertical-align: top; }
+#dashboard-txn-cell { width: 50%; background: var(--card-bg); }
+#dashboard-chart-cell { width: 50%; background: var(--card-bg); padding: 1rem 1.25rem;}
+
+/* ── Recent transactions card ── */
+#recent-transactions-card {
+  background: var(--card-bg); border-radius: 8px;
+  padding: 1rem 1.25rem; min-height: 260px;
+}
+#recent-transactions-title {
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; opacity: 0.6; margin-bottom: 0.6rem;
+}
+#recent-transactions ul { list-style: none; margin: 0; padding: 0; }
+#recent-transactions li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(128,128,128,0.15);
+  font-size: 0.95rem;
+}
+#recent-transactions li:last-child { border-bottom: none; }
+#recent-transactions a {
+  display: block; margin-top: 0.6rem; font-size: 0.9rem;
+  color: var(--accent); text-decoration: none;
+}
+#recent-transactions a:hover { text-decoration: underline; }
+
+/* ── Dashboard chart ── */
+#dashboard-chart-cell canvas { width: 100% !important; padding: 20px !important;}
+
+/* ── Mobile: stack dashboard columns ── */
+@media (max-width: 600px) {
+  #dashboard-layout, #dashboard-layout tbody,
+  #dashboard-layout tr, #dashboard-txn-cell, #dashboard-chart-cell {
+    display: block; width: 100%;
+  }
+  #dashboard-txn-cell { padding-right: 0; margin-bottom: 1rem; }
+}
+
+/* ── Form — centered ── */
+#form-center {
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
+}
+
+#txn-form {
+  display: flex; flex-direction: column; gap: 0.75rem;
+  width: 100%; max-width: 420px;
+}
+#txn-form label {
+  display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.95rem;
+}
+#txn-form input, #txn-form select, #txn-form textarea {
+  background: var(--card-bg); border: 1px solid var(--accent);
+  border-radius: 4px; color: var(--text); font-size: 1rem;
+  font-family: 'EB Garamond', Georgia, serif; padding: 0.4rem 0.6rem;
+}
+#txn-form textarea { resize: vertical; min-height: 80px; }
+
+#field-new-category { margin-top: 0.4rem; }
+#field-new-category input {
+  width: 100%; background: var(--card-bg); border: 1px solid var(--accent);
+  border-radius: 4px; color: var(--text); font-size: 1rem;
+  font-family: 'EB Garamond', Georgia, serif; padding: 0.4rem 0.6rem;
+}
+
+.field-error { color: var(--error); font-size: 0.8rem; margin-top: 0.15rem; }
+
+.form-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+.form-actions button {
+  flex: 1; padding: 0.55rem 0; border-radius: 4px; cursor: pointer;
+  font-size: 1rem; font-family: 'EB Garamond', Georgia, serif; border: none;
+}
+#btn-submit-form { background: var(--accent); color: #fff; }
+#btn-submit-form:hover { opacity: 0.85; }
+#btn-cancel-form { background: var(--card-bg); color: var(--text); border: 1px solid var(--accent); }
+#btn-cancel-form:hover { background: var(--accent); color: #fff; }
+
+/* ── Transaction List header ── */
+#list-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 0.75rem; flex-wrap: wrap;
+}
+#btn-back-dashboard {
+  background: none; border: 1px solid var(--accent); border-radius: 4px;
+  color: var(--accent); cursor: pointer;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.95rem; padding: 0.3rem 0.75rem;
+}
+#btn-back-dashboard:hover { background: var(--accent); color: #fff; }
+#month-selector {
+  background: var(--card-bg); border: 1px solid var(--accent);
+  border-radius: 4px; color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.95rem; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+
+/* ── Transaction List layout table (chart + table side by side) ── */
+#list-layout { width: 100%; border-collapse: collapse; }
+#list-layout tr { vertical-align: top; }
+
+#list-chart-cell {
+  width: 340px;
+  min-width: 260px;
+  padding-right: 1.25rem;
+}
+#list-chart-title {
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; opacity: 0.6; margin-bottom: 0.5rem;
+  text-align: center;
+}
+#list-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+#list-chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#list-table-cell { width: auto; }
+
+/* ── Transaction table ── */
+#txn-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+#txn-table th, #txn-table td {
+  border: 1px solid var(--card-bg); padding: 0.5rem 0.75rem; text-align: left;
+}
+#txn-table th { background: var(--card-bg); font-weight: 600; }
+#txn-table button {
+  background: none; border: 1px solid var(--accent); border-radius: 3px;
+  color: var(--accent); cursor: pointer; font-size: 0.85rem;
+  font-family: 'EB Garamond', Georgia, serif;
+  padding: 0.15rem 0.5rem; margin-right: 0.25rem;
+}
+#txn-table button:hover { background: var(--accent); color: #fff; }
+
+/* ── Mobile: stack list columns ── */
+@media (max-width: 600px) {
+  #list-layout, #list-layout tbody,
+  #list-layout tr, #list-chart-cell, #list-table-cell {
+    display: block; width: 100%;
+  }
+  #list-chart-cell { padding-right: 0; margin-bottom: 1.25rem; }
+  #list-chart-wrap { height: 280px; }
+}
+
+/* ── Utility ── */
+.hidden { display: none !important; }
