@@ -136,7 +136,71 @@ function showTab(name) {
   });
 }
 
-// ─── Dashboard ───────────────────────────────────────────────────────────────
+// ─── Shared chart builder ────────────────────────────────────────────────────
+
+/**
+ * Build a Chart.js v4 pie chart config.
+ * Labels = category names. Each slice shows "Name\nXX%" on the chart.
+ * Legend shows "Name (XX%)" at the bottom.
+ */
+function _buildPieConfig(labels, data) {
+  const total = data.reduce((s, v) => s + v, 0);
+
+  const PALETTE = [
+    '#4dc9f6','#f67019','#f53794','#537bc4','#acc236',
+    '#166a8f','#00a950','#58595b','#8549ba','#e8c534',
+  ];
+
+  return {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{ data, borderWidth: 1, backgroundColor: PALETTE.slice(0, data.length) }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
+              return ` ${ctx.label}: ${formatAmount(ctx.parsed)} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+    plugins: [{
+      id: 'sliceLabels',
+      afterDraw(chart) {
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data.length) return;
+        const ctx = chart.ctx;
+        ctx.save();
+        meta.data.forEach((arc, i) => {
+          const pct = total > 0 ? Math.round((data[i] / total) * 100) : 0;
+          if (pct < 4) return; // skip tiny slices
+          const angle  = (arc.startAngle + arc.endAngle) / 2;
+          const radius = (arc.innerRadius + arc.outerRadius) / 2;
+          const x = arc.x + Math.cos(angle) * radius;
+          const y = arc.y + Math.sin(angle) * radius;
+          ctx.fillStyle    = '#fff';
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'middle';
+          // Line 1: category name
+          ctx.font = "bold 11px 'EB Garamond', Georgia, serif";
+          ctx.fillText(labels[i], x, y - 7);
+          // Line 2: percentage
+          ctx.font = "12px 'EB Garamond', Georgia, serif";
+          ctx.fillText(`${pct}%`, x, y + 7);
+        });
+        ctx.restore();
+      },
+    }],
+  };
+}
 
 let _dashboardChart = null;
 let _dashboardMonth = null;
@@ -165,25 +229,17 @@ function renderDashboardChart(monthTxns) {
       byCategory.set(t.categoryId, (byCategory.get(t.categoryId) || 0) + t.amount);
   }
 
-  const labels = [], data = [], colors = [];
+  const labels = [], data = [];
   for (const [id, spent] of byCategory) {
     const cat = State.categories.find(c => c.id === id);
     labels.push(cat ? cat.name : id);
     data.push(spent);
-    colors.push(null);
   }
 
   if (_dashboardChart) { _dashboardChart.destroy(); _dashboardChart = null; }
   if (!data.length) return;
 
-  _dashboardChart = new window.Chart(canvas, {
-    type: 'pie',
-    data: { labels, datasets: [{ data, borderWidth: 1 }] },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom' } },
-    },
-  });
+  _dashboardChart = new window.Chart(canvas, _buildPieConfig(labels, data));
 }
 
 function renderDashboard() {
@@ -191,13 +247,16 @@ function renderDashboard() {
   const fi = document.getElementById('dashboard-month');
   if (fi) fi.value = month;
 
-  document.getElementById('total-balance').textContent =
-    formatAmount(computeTotalBalance(State.transactions));
-
-  // Balance diff
-  const diffEl   = document.getElementById('balance-diff');
+  // Filter transactions for the selected month
   const monthTxns = State.transactions.filter(t => t.date && t.date.startsWith(month));
   const prevTxns  = State.transactions.filter(t => t.date && t.date.startsWith(_prevMonth(month)));
+
+  // Total balance = net for the selected month only
+  document.getElementById('total-balance').textContent =
+    formatAmount(computeTotalBalance(monthTxns));
+
+  // Balance diff vs previous month
+  const diffEl = document.getElementById('balance-diff');
   if (monthTxns.length > 0 && prevTxns.length > 0) {
     const net = arr => arr.reduce((s, t) =>
       s + (t.type === 'income' ? t.amount : t.type === 'expense' ? -t.amount : 0), 0);
@@ -206,11 +265,12 @@ function renderDashboard() {
     diffEl.className   = diff >= 0 ? 'positive' : 'negative';
     diffEl.classList.remove('hidden');
   } else {
+    diffEl.textContent = '';
     diffEl.classList.add('hidden');
   }
 
-  // Recent transactions list
-  const sorted = State.transactions.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  // Transaction list filtered by selected month, reverse chronological
+  const sorted = monthTxns.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const container = document.getElementById('recent-transactions');
   const ul = document.createElement('ul');
   sorted.slice(0, 10).forEach(txn => {
@@ -226,8 +286,8 @@ function renderDashboard() {
   container.innerHTML = '';
   container.appendChild(ul);
 
-  // Show "show more" only when > 10 transactions
-  if (State.transactions.length > 1) {
+  // Show "show more" only when filtered month has > 10 transactions
+  if (monthTxns.length > 10) {
     const a = document.createElement('a');
     a.href = '#';
     a.textContent = 'show more';
@@ -431,52 +491,17 @@ function renderListChart(transactions) {
       byCategory.set(t.categoryId, (byCategory.get(t.categoryId) || 0) + t.amount);
   }
 
-  const labels = [], data = [], labelColors = [];
-  const balances = computeBalances(State.transactions);
+  const labels = [], data = [];
   for (const [id, spent] of byCategory) {
     const cat = State.categories.find(c => c.id === id);
     labels.push(cat ? cat.name : id);
     data.push(spent);
-    labelColors.push(spent > (balances.get(id) || 0) ? '#cc0000' : null);
   }
 
   if (_listChart) { _listChart.destroy(); _listChart = null; }
   if (!data.length) return;
 
-  _listChart = new window.Chart(canvas, {
-    type: 'pie',
-    data: { labels, datasets: [{ data, borderWidth: 1 }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: {
-            font: { family: "'EB Garamond', Georgia, serif", size: 13 },
-            padding: 14,
-            // Use category names as legend labels (already set via labels array)
-            generateLabels(chart) {
-              const items = window.Chart.defaults.plugins.legend.labels.generateLabels(chart);
-              items.forEach((item, i) => {
-                if (labelColors[i]) {
-                  item.fontColor = labelColors[i];
-                  item.font = { weight: 'bold' };
-                }
-              });
-              return items;
-            },
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label(ctx) { return ` ${ctx.label}: ${formatAmount(ctx.parsed)}`; },
-          },
-        },
-      },
-    },
-  });
+  _listChart = new window.Chart(canvas, _buildPieConfig(labels, data));
 }
 
 function renderTransactionList(month) {
@@ -554,6 +579,13 @@ document.addEventListener('DOMContentLoaded', () => {
     State.theme = State.theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', State.theme);
     Storage.save(State);
+  });
+
+  // "Transaction List" title in dashboard → navigate to list tab
+  document.getElementById('txn-list-title').addEventListener('click', e => {
+    e.preventDefault();
+    renderTransactionList(_currentMonth);
+    showTab('list');
   });
 
   // Dashboard month filter
