@@ -3,9 +3,9 @@
 // ─── Default categories ──────────────────────────────────────────────────────
 
 const DEFAULT_CATEGORIES = [
-  { id: 'cat-eat',       name: 'Eat',       balance: 0 },
-  { id: 'cat-groceries', name: 'Groceries', balance: 0 },
-  { id: 'cat-bill',      name: 'Bill',      balance: 0 },
+  { id: 'cat-food',       name: 'Food',       balance: 0 },
+  { id: 'cat-transport', name: 'Transport', balance: 0 },
+  { id: 'cat-fun',      name: 'Fun',      balance: 0 },
 ];
 
 // ─── Storage (localStorage with in-memory fallback) ─────────────────────────
