@@ -145,6 +145,9 @@ function showTab(name) {
  */
 function _buildPieConfig(labels, data) {
   const total = data.reduce((s, v) => s + v, 0);
+  // Explode slices that represent > 40% of total spending
+  const EXPLODE_THRESHOLD = 0.40;
+  const offsets = data.map(v => (total > 0 && v / total > EXPLODE_THRESHOLD) ? 18 : 0);
 
   const PALETTE = [
     '#4dc9f6','#f67019','#f53794','#537bc4','#acc236',
@@ -155,7 +158,12 @@ function _buildPieConfig(labels, data) {
     type: 'pie',
     data: {
       labels,
-      datasets: [{ data, borderWidth: 1, backgroundColor: PALETTE.slice(0, data.length) }],
+      datasets: [{
+        data,
+        borderWidth: 1,
+        backgroundColor: PALETTE.slice(0, data.length),
+        offset: offsets,
+      }],
     },
     options: {
       responsive: true,
@@ -181,7 +189,7 @@ function _buildPieConfig(labels, data) {
         ctx.save();
         meta.data.forEach((arc, i) => {
           const pct = total > 0 ? Math.round((data[i] / total) * 100) : 0;
-          if (pct < 4) return; // skip tiny slices
+          if (pct < 4) return;
           const angle  = (arc.startAngle + arc.endAngle) / 2;
           const radius = (arc.innerRadius + arc.outerRadius) / 2;
           const x = arc.x + Math.cos(angle) * radius;
@@ -189,10 +197,8 @@ function _buildPieConfig(labels, data) {
           ctx.fillStyle    = '#fff';
           ctx.textAlign    = 'center';
           ctx.textBaseline = 'middle';
-          // Line 1: category name
           ctx.font = "bold 11px 'EB Garamond', Georgia, serif";
           ctx.fillText(labels[i], x, y - 7);
-          // Line 2: percentage
           ctx.font = "12px 'EB Garamond', Georgia, serif";
           ctx.fillText(`${pct}%`, x, y + 7);
         });
@@ -476,6 +482,7 @@ function submitForm() {
 
 let _currentMonth = null;
 let _listChart    = null;
+let _sortOrder    = 'date-desc'; // current sort for transaction list
 
 function renderListChart(transactions) {
   const canvas = document.getElementById('list-chart');
@@ -511,10 +518,25 @@ function renderTransactionList(month) {
   const sel = document.getElementById('month-selector');
   if (sel) sel.value = month;
 
-  const filtered = State.transactions
+  // Apply sort
+  const sortSel = document.getElementById('sort-select');
+  const sort = (sortSel ? sortSel.value : null) || _sortOrder;
+
+  let filtered = State.transactions
     .filter(t => t.date && t.date.startsWith(month))
-    .slice()
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    .slice();
+
+  if (sort === 'date-desc')    filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  else if (sort === 'date-asc') filtered.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  else if (sort === 'amount-desc') filtered.sort((a, b) => b.amount - a.amount);
+  else if (sort === 'amount-asc')  filtered.sort((a, b) => a.amount - b.amount);
+  else if (sort === 'category-az') {
+    filtered.sort((a, b) => {
+      const ca = State.categories.find(c => c.id === a.categoryId);
+      const cb = State.categories.find(c => c.id === b.categoryId);
+      return (ca ? ca.name : '').localeCompare(cb ? cb.name : '');
+    });
+  }
 
   const table = document.getElementById('txn-table');
   if (!table) return;
@@ -630,6 +652,12 @@ document.addEventListener('DOMContentLoaded', () => {
       field.classList.add('hidden');
       input.value = '';
     }
+  });
+
+  // Transaction list sort
+  document.getElementById('sort-select').addEventListener('change', function () {
+    _sortOrder = this.value;
+    renderTransactionList(_currentMonth);
   });
 
   // Back button

@@ -212,6 +212,14 @@ nav {
   font-size: 0.95rem; padding: 0.3rem 0.6rem; cursor: pointer;
 }
 
+#sort-select {
+  margin-left: auto;
+  background: var(--card-bg); border: 1px solid var(--accent);
+  border-radius: 4px; color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.95rem; padding: 0.3rem 0.6rem; cursor: pointer;
+}
+
 /* ── Transaction List layout table (chart + table side by side) ── */
 #list-layout { width: 100%; border-collapse: collapse; }
 #list-layout tr { vertical-align: top; }
